@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import AdminPanel from "./pages/AdminPanel";
 import PrivateRoute from "./components/PrivateRoute";
 import Home from "./pages/Home";
+import Footer from "./components/Footer";
 
 function App() {
   return (
@@ -45,6 +46,7 @@ function App() {
             }
           />
         </Routes>
+        <Footer/>
       </Router>
     </AuthProvider>
   );
