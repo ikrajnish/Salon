@@ -45,6 +45,7 @@ const Navbar = () => {
                 onMouseEnter={() => setDropdown(item.name)}
                 onMouseLeave={() => setDropdown(null)}
               >
+                
                 <button className="flex items-center gap-1 hover:text-[#D7CCC8]">
                   {item.name}
                   <ChevronDown size={14} />
@@ -77,6 +78,11 @@ const Navbar = () => {
 
         {/* Right Icons */}
         <div className="hidden md:flex items-center space-x-4">
+          <Link to="/booking">
+            <button className="bg-[#8D6E63] hover:bg-[#5D4037] text-white px-4 py-2 rounded-full shadow-md font-semibold transition-transform duration-300 hover:scale-105">
+              Book Appointment
+            </button>
+          </Link>
           <Link to="/profile">
             {user?.profilePic ? (
               <img
