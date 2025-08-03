@@ -10,6 +10,7 @@ import AdminPanel from "./pages/AdminPanel";
 import PrivateRoute from "./components/PrivateRoute";
 import Home from "./pages/Home";
 import Footer from "./components/Footer";
+import Trending from "./pages/Trending";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home/>} />
           <Route path="/login" element={<Login />} />
+          <Route path="/trending" element={<Trending/>}/>
 
           {/* Private Routes */}
           <Route
