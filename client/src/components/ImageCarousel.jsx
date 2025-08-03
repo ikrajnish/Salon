@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from "react";
 
-// Import images
-import image1 from "../assets/image1.jpg";
-import image2 from "../assets/image2.jpg";
-import image3 from "../assets/image3.jpg";
-import image4 from "../assets/image4.jpg";
-
-const images = [image1, image4, image2, image3];
+const images = [
+  "https://res.cloudinary.com/dlbgabdi1/image/upload/v1754237420/image4_calq0x.jpg",
+  "https://res.cloudinary.com/dlbgabdi1/image/upload/v1754237413/image2_jhxq66.jpg",
+  "https://res.cloudinary.com/dlbgabdi1/image/upload/v1754237410/image3_pgvtob.jpg",
+  "https://res.cloudinary.com/dlbgabdi1/image/upload/v1754237408/image1_jm1r6b.jpg",
+  "https://res.cloudinary.com/dlbgabdi1/image/upload/v1754237902/1752579574595_xkcvic.jpg",
+  "https://res.cloudinary.com/dlbgabdi1/image/upload/v1754237905/1754212131603_oehyye.jpg",
+  "https://res.cloudinary.com/dlbgabdi1/image/upload/v1754237912/1754212764372_t8fw40.jpg",
+  "https://res.cloudinary.com/dlbgabdi1/image/upload/v1754237918/1754212642380_x7xc7c.jpg",
+  "https://res.cloudinary.com/dlbgabdi1/image/upload/v1754237920/1752579711634_jocbb1.jpg",
+  "https://res.cloudinary.com/dlbgabdi1/image/upload/v1754237921/1754212224080_1_on0ubr.jpg",
+  "https://res.cloudinary.com/dlbgabdi1/image/upload/v1754237923/1752579919066_t8ad5o.jpg",
+  "https://res.cloudinary.com/dlbgabdi1/image/upload/v1754237923/1752579804975_mf92wj.jpg",
+];
 
 const ImageCarousel = () => {
   const [current, setCurrent] = useState(0);
@@ -15,22 +22,24 @@ const ImageCarousel = () => {
     const interval = setInterval(() => {
       setCurrent((prev) => (prev + 1) % images.length);
     }, 2500);
-
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="w-full aspect-[3/2] relative overflow-hidden bg-black">
-      {images.map((img, idx) => (
-        <img
-          key={idx}
-          src={img}
-          alt={`slide-${idx}`}
-          className={`w-full h-full object-contain absolute top-0 left-0 transition-opacity duration-1000 ease-in-out ${
-            idx === current ? "opacity-100 z-10" : "opacity-0 z-0"
-          }`}
-        />
-      ))}
+    <div className="relative w-full h-[600px] overflow-hidden">
+      {/* Blurred background */}
+      <img
+        src={images[current]}
+        alt="blurred-bg"
+        className="absolute inset-0 w-full h-full object-cover blur-md scale-110"
+      />
+      
+      {/* Foreground focused image */}
+      <img
+        src={images[current]}
+        alt={`slide-${current}`}
+        className="relative z-10 h-full max-w-full object-contain mx-auto transition-opacity duration-1000 ease-in-out"
+      />
     </div>
   );
 };

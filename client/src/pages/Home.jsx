@@ -1,5 +1,4 @@
 import React from "react";
-import coverVideo from "../assets/mores_cover.mp4";
 import ImageCarousel from "../components/ImageCarousel";
 import Services from "../components/Services";
 import Refer from "../components/Refer";
@@ -16,7 +15,10 @@ const Home = () => {
           playsInline
           className="absolute top-0 left-0 w-full h-full object-cover z-0"
         >
-          <source src={coverVideo} type="video/mp4" />
+          <source
+            src="https://res.cloudinary.com/dlbgabdi1/video/upload/v1754237150/mores_cover_azmxmb.mp4"
+            type="video/mp4"
+          />
           Your browser does not support the video tag.
         </video>
         <div className="absolute top-0 left-0 w-full h-full bg-opacity-50 flex items-center justify-center z-10">
