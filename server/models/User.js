@@ -2,11 +2,11 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
   firstName: String,
-  email: { type: String, unique: true },
+  phone: { type: String, required: true, unique: true },
   profilePic: String,
-  isAdmin: { type: Boolean, default: false },
   referralCode: String,
   referredBy: String,
+  isAdmin: { type: Boolean, default: false },
   discountBookingsRemaining: { type: Number, default: 3 },
 });
 
