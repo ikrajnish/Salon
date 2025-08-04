@@ -1,65 +1,35 @@
-import React from "react";
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import API from "../api/axios";
 
 const Profile = () => {
-  const [form, setForm] = useState({
-    firstName: "",
-    email: "",
-    profilePic: "",
-  });
+  const saved = JSON.parse(localStorage.getItem("user"));
+  const [firstName, setFirstName] = useState(saved?.firstName || "");
+  const [profilePic, setProfilePic] = useState(saved?.profilePic || "");
+  const navigate = useNavigate();
 
-  // Load existing user from localStorage or backend
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (user) setForm(user);
-  }, []);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    // Save to localStorage or send to backend
-    localStorage.setItem("user", JSON.stringify(form));
-    alert("Profile updated!");
+    await API.post("/auth/signup", {
+      phone: saved.phone,
+      firstName,
+      profilePic,
+      referredBy: saved.referredBy || null,
+    });
+    navigate("/dashboard");
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white shadow rounded mt-10">
-      <h2 className="text-xl font-bold mb-4">Edit Profile</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#F5ECE3] p-4">
+      <form onSubmit={handleSubmit} className="bg-white rounded shadow p-6 w-full max-w-md">
+        <h2 className="text-[#5D4037] text-xl font-semibold mb-4">Complete Profile</h2>
         <input
-          type="text"
-          name="firstName"
-          value={form.firstName}
-          onChange={handleChange}
-          placeholder="First Name"
-          className="w-full border p-2 rounded"
-        />
+          type="text" placeholder="First Name" className="w-full border p-2 rounded mb-3"
+          value={firstName} onChange={e=>setFirstName(e.target.value)} required />
         <input
-          type="email"
-          name="email"
-          value={form.email}
-          onChange={handleChange}
-          placeholder="Email"
-          className="w-full border p-2 rounded"
-        />
-        <input
-          type="text"
-          name="profilePic"
-          value={form.profilePic}
-          onChange={handleChange}
-          placeholder="Profile Image URL"
-          className="w-full border p-2 rounded"
-        />
-        <button
-          type="submit"
-          className="bg-black text-white px-4 py-2 rounded"
-        >
-          Save
-        </button>
+          type="text" placeholder="Profile Image URL" className="w-full border p-2 rounded mb-3"
+          value={profilePic} onChange={e=>setProfilePic(e.target.value)} />
+        <button className="w-full bg-[#8D6E63] text-white py-2 rounded">Save</button>
       </form>
     </div>
   );
