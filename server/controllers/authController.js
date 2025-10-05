@@ -1,52 +1,79 @@
 // controllers/authController.js
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
+import admin from "firebase-admin";
+import fs from "fs";
+import path from "path";
 
-export const signup = async (req, res) => {
+// Initialize Firebase Admin with service account if provided, otherwise ADC
+if (!admin.apps.length) {
   try {
-    const { phone, firstName, profilePic, referredBy } = req.body;
+    const serviceAccountPath = path.resolve("./serviceAccountKey.json");
+    const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+    console.log("✅ Firebase Admin initialized using local service account.");
+  } catch (error) {
+    console.error("❌ Failed to initialize Firebase Admin:", error);
+  }
+}
 
-    if (!phone) return res.status(400).json({ msg: "Phone number is required" });
 
-    let user = await User.findOne({ phone });
-
-    // If user exists, just return token
-    if (user) {
-      const token = jwt.sign({ id: user._id, isAdmin: user.isAdmin }, process.env.JWT_SECRET, {
-        expiresIn: "7d",
-      });
-      return res.status(200).json({ token, user });
+/**
+ * POST /api/auth/google
+ * Accepts either:
+ *  - body: { idToken: "<firebase id token>" }
+ *  - Authorization header: "Bearer <firebase id token>"
+ *
+ * Verifies Firebase ID token, creates/gets user, returns backend JWT + user.
+ */
+export const googleLogin = async (req, res) => {
+  try {
+    // Accept idToken from body or Authorization header
+    let idToken = null;
+    if (req.body && req.body.idToken) idToken = req.body.idToken;
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+    if (!idToken && authHeader) {
+      idToken = authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : authHeader;
     }
 
-    const referralCode = phone.slice(-4) + Math.floor(Math.random() * 1000);
+    if (!idToken) return res.status(400).json({ msg: "ID Token required (body or Authorization header)" });
 
-    user = new User({
-      phone,
-      firstName,
-      profilePic,
-      referralCode,
-      referredBy: referredBy || null,
-      discountBookingsRemaining: 3,
-    });
+    // Verify Firebase ID token
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const { uid, email, name, picture } = decoded;
 
-    await user.save();
-
-    // Reward the referrer if exists
-    if (referredBy) {
-      const referrer = await User.findOne({ referralCode: referredBy });
-      if (referrer) {
-        referrer.discountBookingsRemaining = 3;
-        await referrer.save();
+    let user = await User.findOne({ firebaseUid: uid });
+if (!user) {
+  user = new User({
+    firebaseUid: uid,
+    email,
+    firstName: name || "",
+    profilePic: picture || "",
+  });
+  await user.save();
+} else {
+      // Ensure firebaseUid is set if missing
+      if (!user.firebaseUid) {
+        user.firebaseUid = uid;
+        await user.save();
       }
     }
 
-    const token = jwt.sign({ id: user._id, isAdmin: user.isAdmin }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
-    });
+    const token = jwt.sign(
+      { id: user._id, isAdmin: user.isAdmin },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
-    res.status(201).json({ token, user });
+    return res.status(200).json({ token, user });
   } catch (err) {
-    console.error("Signup error:", err.message);
-    res.status(500).json({ msg: "Signup failed", error: err.message });
+    console.error("Google login error:", err);
+    // Distinguish verification errors if possible
+    if (err.code === "auth/id-token-expired" || err.code === "auth/invalid-id-token") {
+      return res.status(401).json({ msg: "Invalid or expired Firebase ID token", error: err.message });
+    }
+    return res.status(500).json({ msg: "Login failed", error: err.message || err.toString() });
   }
 };

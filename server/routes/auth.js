@@ -1,10 +1,9 @@
-// routes/auth.js
 import express from "express";
-import { signup } from "../controllers/authController.js";
+import { googleLogin } from "../controllers/authController.js";
 
 const router = express.Router();
 
-// POST /api/auth/signup (phone-based)
-router.post("/signup", signup);
+// POST /api/auth/google
+router.post("/google", googleLogin);
 
 export default router;

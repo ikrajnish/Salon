@@ -1,14 +1,11 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
+  firebaseUid: { type: String, unique: true }, // Firebase UID
+  email: { type: String, required: true, unique: true },
   firstName: String,
-  phone: { type: String, required: true, unique: true },
   profilePic: String,
-  referralCode: String,
-  referredBy: String,
   isAdmin: { type: Boolean, default: false },
-  discountBookingsRemaining: { type: Number, default: 3 },
 });
-
 
 export default mongoose.model("User", userSchema);

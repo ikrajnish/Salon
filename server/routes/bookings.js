@@ -1,18 +1,16 @@
 import express from "express";
-import {
-  createBooking,
-  getBookedSlots,
-  getAllBookings,
-  updateBooking,
-} from "../controllers/bookingController.js";
 import { authenticateUser, authorizeAdmin } from "../utils/authMiddleware.js";
+import { createBooking, getUserBookings, getAllBookings } from "../controllers/bookingController.js";
 
 const router = express.Router();
 
-router.post("/", authenticateUser, createBooking);
-router.get("/:date", getBookedSlots);
+// Admin creates booking
+router.post("/", authenticateUser, authorizeAdmin, createBooking);
 
-router.get("/admin/all", authenticateUser, authorizeAdmin, getAllBookings);
-router.put("/admin/:id", authenticateUser, authorizeAdmin, updateBooking);
+// User fetches their bookings
+router.get("/my", authenticateUser, getUserBookings);
+
+// Admin fetches all bookings
+router.get("/", authenticateUser, authorizeAdmin, getAllBookings);
 
 export default router;

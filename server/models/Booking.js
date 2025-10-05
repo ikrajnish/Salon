@@ -1,14 +1,15 @@
 import mongoose from "mongoose";
 
 const bookingSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   services: [String],
-  date: String, // format: '2025-07-01'
-  timeSlot: String, // format: '10:00 AM - 11:00 AM'
+  date: { type: Date, required: true },
+  timeSlot: { type: String, required: true },
   status: { type: String, default: "pending" },
-  amount: Number,
-  finalAmount: Number,
+  amount: { type: Number, required: true },
+  finalAmount: { type: Number, required: true },
   createdAt: { type: Date, default: Date.now },
 });
+
 
 export default mongoose.model("Booking", bookingSchema);
