@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
-  firebaseUid: { type: String, unique: true }, // Firebase UID
+  firebaseUid: { type: String, unique: true, required: true },
   email: { type: String, required: true, unique: true },
-  firstName: String,
-  profilePic: String,
+  firstName: { type: String },
+  profilePic: { type: String },
   isAdmin: { type: Boolean, default: false },
 });
 
