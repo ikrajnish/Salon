@@ -1,25 +1,9 @@
 // controllers/authController.js
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
-import admin from "firebase-admin";
-import fs from "fs";
-import path from "path";
+import admin from "../config/firebaseAdmin.js";
 
 // Initialize Firebase Admin with service account if provided, otherwise ADC
-if (!admin.apps.length) {
-  try {
-    const serviceAccountPath = path.resolve("./serviceAccountKey.json");
-    const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
-    console.log("✅ Firebase Admin initialized using local service account.");
-  } catch (error) {
-    console.error("❌ Failed to initialize Firebase Admin:", error);
-  }
-}
-
-
 /**
  * POST /api/auth/google
  * Accepts either:

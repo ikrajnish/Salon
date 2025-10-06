@@ -10,6 +10,8 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(false); // loading state for login button
   const [checkingRedirect, setCheckingRedirect] = useState(true); // initial auth check on app load
 
+  console.log("🌐 Backend Base URL:", import.meta.env.VITE_API_BASE_URL);
+
   // 🔹 Login with Google (Popup method)
   const loginWithGoogle = async () => {
     setLoading(true);
@@ -21,7 +23,7 @@ export const AuthProvider = ({ children }) => {
       const idToken = await result.user.getIdToken();
 
       // Call your backend
-      const res = await API.post("auth/google", { idToken });
+      const res = await API.post("/auth/google", { idToken });
       console.log("✅ Backend response:", res.data);
 
       const userData = {
