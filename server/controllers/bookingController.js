@@ -6,7 +6,7 @@ export const createBooking = async (req, res) => {
   try {
     if (!req.user.isAdmin) return res.status(403).json({ msg: "Admin only" });
 
-    const { userId, userEmail, services, date, timeSlot, amount } = req.body;
+    const { userId, userEmail, services, date, timeSlot, amount, finalAmount } = req.body;
 
     let user;
     if (userId) {
@@ -23,7 +23,7 @@ export const createBooking = async (req, res) => {
       date,
       timeSlot,
       amount,
-      finalAmount: amount,
+      finalAmount: finalAmount !== undefined ? finalAmount : amount,
       status: "completed", // or "pending"
     });
 

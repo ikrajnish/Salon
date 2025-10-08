@@ -28,7 +28,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="bg-black text-white font-sans shadow z-50 w-full fixed">
+    <nav className="bg-[#003463] text-white font-sans shadow z-50 w-full fixed">
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="text-2xl font-bold text-gradient-gold tracking-widest">
@@ -79,9 +79,9 @@ const Navbar = () => {
         {/* Right Icons */}
         <div className="hidden md:flex items-center space-x-4">
           <Link to="/booking">
-            <button className="bg-[#8D6E63] hover:bg-[#5D4037] text-white px-4 py-2 rounded-full shadow-md font-semibold transition-transform duration-300 hover:scale-105">
-              Book Appointment
-            </button>
+            <button className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white px-4 py-2 rounded-full shadow-md font-semibold transition-transform duration-300 hover:scale-105 hover:brightness-110">
+  Book Appointment
+</button>
           </Link>
           <Link to="/profile">
             {user?.profilePic ? (

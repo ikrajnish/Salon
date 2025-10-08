@@ -1,34 +1,36 @@
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import cors from "cors"; // optional but recommended for frontend connection
+import cors from "cors";
 
 import bookingRoutes from "./routes/bookings.js";
 import authRoutes from "./routes/auth.js";
+import adminRoutes from "./routes/admin.js"; // 🆕 added
 
 dotenv.config();
 
 const app = express();
 
-// ✅ Middlewares
-app.use(cors()); // allow React frontend to connect
-app.use(express.json()); // parse JSON bodies
+// ✅ Middleware
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "https://salon-two-inky.vercel.app"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+  })
+);
+app.use(express.json());
 
 // ✅ Routes
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes); // 🆕 added
 
-// ✅ Connect to MongoDB & Start Server
+// ✅ MongoDB connection
 mongoose
-  .connect(process.env.MONGO_URI, {
-    // You can omit these options in Mongoose v6+
-    // useNewUrlParser: true,
-    // useUnifiedTopology: true,
-  })
+  .connect(process.env.MONGO_URI)
   .then(() => {
     console.log("✅ Connected to MongoDB");
     app.listen(5000, () => console.log("🚀 Server running on port 5000"));
   })
-  .catch((err) => {
-    console.error("❌ MongoDB connection error:", err.message);
-  });
+  .catch((err) => console.error("❌ MongoDB connection error:", err.message));

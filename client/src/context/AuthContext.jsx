@@ -7,24 +7,18 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false); // loading state for login button
-  const [checkingRedirect, setCheckingRedirect] = useState(true); // initial auth check on app load
+  const [loading, setLoading] = useState(false);
+  const [checkingRedirect, setCheckingRedirect] = useState(true);
 
-  console.log("🌐 Backend Base URL:", import.meta.env.VITE_API_BASE_URL);
-
-  // 🔹 Login with Google (Popup method)
+  // Login with Google
   const loginWithGoogle = async () => {
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-
-      // Get Firebase ID token
       const idToken = await result.user.getIdToken();
 
-      // Call your backend
       const res = await API.post("/auth/google", { idToken });
-      console.log("✅ Backend response:", res.data);
 
       const userData = {
         uid: result.user.uid,
@@ -32,12 +26,11 @@ export const AuthProvider = ({ children }) => {
         firstName: res.data.user.firstName,
         profilePic: res.data.user.profilePic,
         isAdmin: res.data.user.isAdmin,
+        membership: res.data.user.membership || null, // 🔹 include membership
       };
 
-      // Store user and token in localStorage
       localStorage.setItem("user", JSON.stringify(userData));
       localStorage.setItem("token", res.data.token);
-
       setUser(userData);
     } catch (err) {
       console.error("❌ Google login failed:", err);
@@ -46,7 +39,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 🔹 Logout
+  // Logout
   const logout = async () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
@@ -54,7 +47,7 @@ export const AuthProvider = ({ children }) => {
     await auth.signOut();
   };
 
-  // 🔹 Restore user session from localStorage on first load
+  // Restore user session
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     const savedToken = localStorage.getItem("token");
@@ -67,13 +60,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{
-        user,
-        loginWithGoogle,
-        logout,
-        loading,
-        checkingRedirect,
-      }}
+      value={{ user, loginWithGoogle, logout, loading, checkingRedirect, setUser }}
     >
       {children}
     </AuthContext.Provider>
