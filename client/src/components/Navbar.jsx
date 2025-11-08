@@ -106,7 +106,7 @@ const Navbar = () => {
                     </Link>
                   ) : (
                     <Link to="/dashboard" className="block px-4 py-2 text-sm hover:bg-[#222]">
-                      Dashboard
+                      Membership Zone
                     </Link>
                   )}
                   <Link to="/profile" className="block px-4 py-2 text-sm hover:bg-[#222]">
@@ -216,7 +216,7 @@ const Navbar = () => {
                   onClick={() => setIsMobileOpen(false)}
                   className="block text-sm font-semibold hover:text-[#D7CCC8]"
                 >
-                  Dashboard
+                  Membership Zone
                 </Link>
               )}
               <Link
