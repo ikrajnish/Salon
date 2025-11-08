@@ -190,201 +190,205 @@ const AdminPanel = () => {
     );
 
   return (
-    <div className="p-4 overflow-hidden">
-      <h1 className="text-xl font-semibold mb-4">Admin Dashboard</h1>
+  <div className="p-4 bg-gradient-to-r from-blue-200 via-50% to-red-200 min-h-screen">
+    <h1 className="text-xl font-semibold mb-4">Admin Dashboard</h1>
 
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="md:w-1/3 space-y-6">
-          {/* ✅ QR Verification Section */}
-          <div className="border p-4 rounded shadow-sm relative min-h-[200px]">
-            <h2 className="font-semibold mb-2">Verify Membership (QR)</h2>
-            <button
-              onClick={() => setQrOpen(true)}
-              className="bg-[#8D6E63] text-white px-4 py-2 rounded hover:bg-[#5D4037]"
-            >
-              Open QR Scanner
-            </button>
+    {/* Main Grid */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-            {scanSuccess && (
-              <div className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded animate-pulse">
-                ✅ Verified!
-              </div>
-            )}
+      {/* Left Side */}
+      <div className="space-y-6">
 
-            {qrOpen && (
-              <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-                <QrScanner onScan={handleQrScan} onClose={() => setQrOpen(false)} />
-              </div>
-            )}
+        {/* QR Verification Section */}
+        <div className="border p-4 rounded shadow-sm relative w-full">
+          <h2 className="font-semibold mb-3">Verify Membership (QR)</h2>
 
-            {scannedUser && (
-              <div className="mt-4 border p-2 rounded bg-gray-50">
-                <p>
-                  <strong>Email:</strong> {scannedUser.email}
-                </p>
-                <p>
-                  <strong>Membership:</strong> {scannedUser.membership?.type || "None"} (
-                  {scannedUser.membership?.durationInMonths || 0} months)
-                </p>
-                <p>
-                  <strong>Remaining:</strong>{" "}
-                  {remainingDays !== null ? `${remainingDays} days` : "N/A"}
-                </p>
-              </div>
-            )}
-          </div>
+          <button
+            onClick={() => setQrOpen(true)}
+            className="bg-[#8D6E63] text-white px-4 py-2 rounded hover:bg-[#5D4037] w-full md:w-auto"
+          >
+            Open QR Scanner
+          </button>
 
-          {/* ✅ Manual Membership Upgrade Section */}
-          <div className="border p-4 rounded shadow-sm">
-            <h2 className="font-semibold mb-2">Upgrade Membership (Manual)</h2>
-            <select
-              value={selectedUser}
-              onChange={(e) => setSelectedUser(e.target.value)}
-              className="border p-2 rounded w-full mb-2"
-            >
-              <option value="">Select User</option>
-              {users.map((u) => (
-                <option key={u._id} value={u._id}>
-                  {u.firstName} ({u.email})
-                </option>
-              ))}
-            </select>
-            <select
-              value={membershipType}
-              onChange={(e) => setMembershipType(e.target.value)}
-              className="border p-2 rounded w-full mb-2"
-            >
-              <option value="Silver">Silver</option>
-              <option value="SilverPlus">SilverPlus</option>
-              <option value="Gold">Gold</option>
-            </select>
-            <select
-              value={membershipDuration}
-              onChange={(e) => setMembershipDuration(parseInt(e.target.value))}
-              className="border p-2 rounded w-full mb-2"
-            >
-              <option value={3}>3 months</option>
-              <option value={6}>6 months</option>
-              <option value={12}>12 months</option>
-            </select>
-            <button
-              onClick={handleUpgradeMembership}
-              className="bg-[#8D6E63] text-white px-3 py-2 rounded hover:bg-[#5D4037] w-full"
-            >
-              Upgrade Membership
-            </button>
-          </div>
+          {scanSuccess && (
+            <div className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded animate-pulse">
+              ✅ Verified!
+            </div>
+          )}
+
+          {qrOpen && (
+            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+              <QrScanner onScan={handleQrScan} onClose={() => setQrOpen(false)} />
+            </div>
+          )}
+
+          {scannedUser && (
+            <div className="mt-4 border p-3 rounded bg-gray-50 space-y-1 text-sm">
+              <p><strong>Email:</strong> {scannedUser.email}</p>
+              <p><strong>Membership:</strong> {scannedUser.membership?.type || "None"} </p>
+              <p><strong>Remaining:</strong> {remainingDays || 0} days</p>
+            </div>
+          )}
         </div>
 
-        {/* ✅ Existing Booking Section (unchanged) */}
-        <div className="md:w-2/3 border p-4 rounded shadow-sm">
-          <h2 className="font-semibold mb-2 text-lg">Create Booking</h2>
+        {/* Manual Membership Upgrade */}
+        <div className="border p-4 rounded shadow-sm w-full">
+          <h2 className="font-semibold mb-3">Upgrade Membership (Manual)</h2>
+
+          <input
+            list="users"
+            className="border p-2 w-full rounded mb-2"
+            placeholder="Select or type user"
+            onChange={(e) => {
+              const match = users.find(
+                u => `${u.firstName} (${u.email})` === e.target.value
+              );
+              setSelectedUser(match?._id || "");
+            }}
+          />
+          <datalist id="users">
+            {users.map((u) => (
+              <option key={u._id} value={`${u.firstName} (${u.email})`} />
+            ))}
+          </datalist>
+
+          <select
+            value={membershipType}
+            onChange={(e) => setMembershipType(e.target.value)}
+            className="border p-2 rounded w-full mb-2"
+          >
+            <option value="Silver">Silver</option>
+            <option value="Gold">Gold</option>
+          </select>
+
+          <select
+            value={membershipDuration}
+            onChange={(e) => setMembershipDuration(parseInt(e.target.value))}
+            className="border p-2 rounded w-full mb-2"
+          >
+            <option value={3}>3 months</option>
+            <option value={6}>6 months</option>
+            <option value={12}>12 months</option>
+          </select>
+
+          <button
+            onClick={handleUpgradeMembership}
+            className="bg-[#8D6E63] text-white px-3 py-2 rounded hover:bg-[#5D4037] w-full"
+          >
+            Upgrade Membership
+          </button>
+        </div>
+
+      </div>
+
+      {/* Create Booking Section */}
+      <div className="md:col-span-2 border p-4 rounded shadow-sm w-full">
+        <h2 className="font-semibold mb-4 text-lg">Create Booking</h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <input
             type="email"
             placeholder="User Email"
             value={scannedEmail}
             onChange={(e) => setScannedEmail(e.target.value)}
-            className="border p-2 rounded w-full mb-2"
+            className="border p-2 rounded w-full"
           />
           <input
             type="text"
             placeholder="Services (comma separated)"
             value={services}
             onChange={(e) => setServices(e.target.value)}
-            className="border p-2 rounded w-full mb-2"
+            className="border p-2 rounded w-full"
           />
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="border p-2 rounded w-full mb-2"
+            className="border p-2 rounded w-full"
           />
           <input
             type="time"
             value={timeSlot}
             onChange={(e) => setTimeSlot(e.target.value)}
-            className="border p-2 rounded w-full mb-2"
+            className="border p-2 rounded w-full"
           />
           <input
             type="number"
             placeholder="Amount"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="border p-2 rounded w-full mb-2"
+            className="border p-2 rounded w-full"
           />
           <input
             type="number"
             placeholder="Final Amount"
             value={finalAmount}
             onChange={(e) => setFinalAmount(e.target.value)}
-            className="border p-2 rounded w-full mb-2"
+            className="border p-2 rounded w-full"
           />
-          <button
-            onClick={handleCreateBooking}
-            className="bg-[#8D6E63] text-white px-4 py-2 rounded hover:bg-[#5D4037] w-full"
-          >
-            Create Booking
-          </button>
         </div>
-      </div>
 
-      {/* ✅ Existing Booking List */}
-      <div className="mt-6 space-y-3">
-        {bookings.map((b) => (
-          <div
-            key={b._id}
-            className="border p-3 rounded shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
-          >
-            <div>
-              <p>
-                <strong>User:</strong> {b.user?.firstName || "N/A"}
-              </p>
-              <p>
-                <strong>Services:</strong> {b.services.join(", ")}
-              </p>
-              <p>
-                <strong>Date:</strong> {new Date(b.date).toLocaleDateString()}
-              </p>
-              <p>
-                <strong>Time:</strong> {b.timeSlot}
-              </p>
-            </div>
-            <div className="flex gap-2 items-center">
-              <input
-                type="number"
-                value={b.amount}
-                onChange={(e) => handleFieldChange(b._id, "amount", e.target.value)}
-                className="border p-1 rounded w-20"
-              />
-              <input
-                type="number"
-                value={b.finalAmount}
-                onChange={(e) => handleFieldChange(b._id, "finalAmount", e.target.value)}
-                className="border p-1 rounded w-20"
-              />
-              <select
-                value={b.status}
-                onChange={(e) => handleFieldChange(b._id, "status", e.target.value)}
-                className="border p-1 rounded"
-              >
-                <option value="pending">Pending</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-              {editing[b._id] && (
-                <button
-                  onClick={() => handleUpdate(b._id)}
-                  className="bg-[#8D6E63] text-white px-2 py-1 rounded hover:bg-[#5D4037]"
-                >
-                  Save
-                </button>
-              )}
-            </div>
-          </div>
-        ))}
+        <button
+          onClick={handleCreateBooking}
+          className="mt-3 bg-[#8D6E63] text-white px-4 py-2 rounded hover:bg-[#5D4037] w-full"
+        >
+          Create Booking
+        </button>
       </div>
     </div>
-  );
+
+    {/* Booking List */}
+    <div className="mt-6 space-y-4">
+      {bookings.map((b) => (
+        <div
+          key={b._id}
+          className="border p-4 rounded shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-4 w-full"
+        >
+          <div className="text-sm space-y-1 w-full">
+            <p><strong>User:</strong> {b.user?.firstName || "N/A"}</p>
+            <p><strong>Services:</strong> {b.services.join(", ")}</p>
+            <p><strong>Date:</strong> {new Date(b.date).toLocaleDateString()}</p>
+            <p><strong>Time:</strong> {b.timeSlot}</p>
+          </div>
+
+          <div className="flex flex-wrap gap-2 items-center w-full md:w-auto">
+            <input
+              type="number"
+              value={b.amount}
+              onChange={(e) => handleFieldChange(b._id, "amount", e.target.value)}
+              className="border p-1 rounded w-24"
+            />
+            <input
+              type="number"
+              value={b.finalAmount}
+              onChange={(e) => handleFieldChange(b._id, "finalAmount", e.target.value)}
+              className="border p-1 rounded w-24"
+            />
+            <select
+              value={b.status}
+              onChange={(e) => handleFieldChange(b._id, "status", e.target.value)}
+              className="border p-1 rounded w-28"
+            >
+              <option value="pending">Pending</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+
+            {editing[b._id] && (
+              <button
+                onClick={() => handleUpdate(b._id)}
+                className="bg-[#8D6E63] text-white px-3 py-1 rounded hover:bg-[#5D4037]"
+              >
+                Save
+              </button>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
 };
 
 export default AdminPanel;

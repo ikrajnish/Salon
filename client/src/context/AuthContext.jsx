@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth } from "../firebase.config";
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 import API from "../api/axios";
 
 const AuthContext = createContext();
@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [checkingRedirect, setCheckingRedirect] = useState(true);
 
-  // Login with Google
+  // 🔹 Login with Google
   const loginWithGoogle = async () => {
     setLoading(true);
     try {
@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
         firstName: res.data.user.firstName,
         profilePic: res.data.user.profilePic,
         isAdmin: res.data.user.isAdmin,
-        membership: res.data.user.membership || null, // 🔹 include membership
+        membership: res.data.user.membership || null,
       };
 
       localStorage.setItem("user", JSON.stringify(userData));
@@ -39,15 +39,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Logout
+  // 🔹 Logout (instant context reset + Firebase sign-out)
   const logout = async () => {
+    try {
+      await signOut(auth); // Firebase signout
+    } catch (e) {
+      console.warn("Firebase signOut error:", e);
+    }
+
+    // Clear storage + reset immediately
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     setUser(null);
-    await auth.signOut();
   };
 
-  // Restore user session
+  // 🔹 Restore user session on mount
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     const savedToken = localStorage.getItem("token");
@@ -60,7 +66,14 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, loginWithGoogle, logout, loading, checkingRedirect, setUser }}
+      value={{
+        user,
+        setUser,
+        loginWithGoogle,
+        logout,
+        loading,
+        checkingRedirect,
+      }}
     >
       {children}
     </AuthContext.Provider>

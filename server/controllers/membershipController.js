@@ -7,7 +7,7 @@ export const setMembership = async (req, res) => {
     const { type, durationInMonths } = req.body;
     const { userId } = req.params;
 
-    if (!["Silver", "SilverPlus", "Gold"].includes(type))
+    if (!["Silver", "Gold"].includes(type))
       return res.status(400).json({ msg: "Invalid membership type" });
     if (![3, 6, 12].includes(durationInMonths))
       return res.status(400).json({ msg: "Invalid duration" });

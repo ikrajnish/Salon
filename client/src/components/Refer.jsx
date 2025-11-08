@@ -33,7 +33,7 @@ const Refer = () => {
   ];
 
   return (
-    <section className="py-16 px-6 md:px-20 bg-white text-[#5D4037]">
+    <section className="py-16 px-6 md:px-20 bg-gradient-to-r from-blue-200 via-50% to-red-200 text-[#5D4037]">
       <h2 className="text-3xl font-bold text-center mb-10">Referral Benefits</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
         {benefits.map((benefit, index) => (

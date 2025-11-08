@@ -26,7 +26,7 @@ const Gallery = () => {
     setSelectedIdx((prev) => (prev - 1 + images.length) % images.length);
 
   return (
-    <section className="py-16 px-6 md:px-20 bg-[#F5ECE3] text-[#5D4037]">
+    <section className="py-16 px-6 md:px-20 bg-gradient-to-r from-blue-200 via-50% to-red-200 text-[#5D4037]">
       <h2 className="text-3xl font-bold mb-10 mt-4 text-center">Trendings</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
         {images.map((img, idx) => (

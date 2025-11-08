@@ -44,7 +44,7 @@ const Dashboard = () => {
     );
 
   return (
-    <div className="p-4">
+    <div className="p-4 ">
       <h1 className="text-xl font-semibold mb-4">Welcome, {user.firstName}</h1>
 
       {/* ✅ Always show membership info */}
@@ -100,7 +100,10 @@ const Dashboard = () => {
                 <strong>Status:</strong> {b.status}
               </p>
               <p>
-                <strong>Amount:</strong> ₹{b.finalAmount}
+                <strong>Amount:</strong> ₹{b.amount}
+              </p>
+              <p>
+                <strong>Final Amount:</strong> ₹{b.finalAmount}
               </p>
             </div>
           ))
