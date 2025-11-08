@@ -1,61 +1,71 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
-import QRCode from "react-qr-code";
-import { useAuth } from "../context/AuthContext";
+import { LogOut } from "lucide-react";
 
-// Cloudinary config
-const CLOUDINARY_UPLOAD_PRESET = "ml_default"; // your unsigned preset
-const CLOUDINARY_CLOUD_NAME = "dlbgabdi1"; // your cloud name
+const CLOUDINARY_UPLOAD_PRESET = "ml_default";
+const CLOUDINARY_CLOUD_NAME = "dlbgabdi1";
 const CLOUDINARY_API = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`;
 
 const Profile = () => {
   const saved = JSON.parse(localStorage.getItem("user"));
-  const [firstName, setFirstName] = useState(saved?.firstName || "");
-  const [profilePic, setProfilePic] = useState(saved?.profilePic || "");
-  const [preview, setPreview] = useState(saved?.profilePic || "");
-  const [bookings, setBookings] = useState([]);
-  const [remainingDays, setRemainingDays] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const navigate = useNavigate();
-  const { user } = useAuth();
 
-  // Fetch bookings
-  const fetchBookings = async () => {
+  const [firstName, setFirstName] = useState(saved?.firstName || "");
+  const [email] = useState(saved?.email || "");
+  const [image, setImage] = useState(saved?.profilePic || "/default-avatar.png");
+  const [preview, setPreview] = useState(saved?.profilePic || "/default-avatar.png");
+
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  const [stats, setStats] = useState({
+    all: 0,
+    avgSaving: 0,
+    totalSaving: 0
+  });
+
+  const membershipInfo = {
+    Normal: { discount: 0 },
+    Silver: { discount: 10 },
+    Gold: { discount: 20 }
+  };
+
+  const membership = saved?.membership || { type: "Normal" };
+  const info = membershipInfo[membership.type];
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
     try {
       const res = await API.get("/bookings/my");
-      setBookings(res.data.sort((a, b) => new Date(b.date) - new Date(a.date)));
+      const bookings = res.data || [];
+
+      let totalSaving = 0;
+
+      bookings.forEach(b => {
+        if (b.amount && b.finalAmount) {
+          totalSaving += b.amount - b.finalAmount;
+        }
+      });
+
+      const totalBookings = bookings.length;
+      const avgSaving = totalBookings ? totalSaving / totalBookings : 0;
+
+      setStats({
+        all: totalBookings,
+        avgSaving: Math.round(avgSaving),
+        totalSaving: Math.round(totalSaving)
+      });
     } catch (err) {
-      console.error("Failed to fetch bookings:", err);
-    } finally {
-      setLoading(false);
+      console.error("Failed to fetch booking stats:", err);
     }
   };
 
-  useEffect(() => {
-    fetchBookings();
-  }, []);
-
-  // Membership remaining days
-  useEffect(() => {
-    if (user?.membership?.expiresAt) {
-      const calculate = () => {
-        const diff = new Date(user.membership.expiresAt) - new Date();
-        setRemainingDays(Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24))));
-      };
-      calculate();
-      const interval = setInterval(calculate, 24 * 60 * 60 * 1000);
-      return () => clearInterval(interval);
-    }
-  }, [user]);
-
-  // Handle image selection & Cloudinary upload
-  const handleImageUpload = async (e) => {
+  const handleImageUpload = async e => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Live preview
     setPreview(URL.createObjectURL(file));
     setUploading(true);
 
@@ -66,34 +76,34 @@ const Profile = () => {
 
       const res = await fetch(CLOUDINARY_API, {
         method: "POST",
-        body: formData,
+        body: formData
       });
 
       const data = await res.json();
 
       if (data.secure_url) {
-        setProfilePic(data.secure_url); // Save Cloudinary URL
+        setImage(data.secure_url);
       } else {
         console.error("Cloudinary upload error:", data);
       }
     } catch (err) {
-      console.error("Image upload failed:", err);
+      console.error(err);
     } finally {
       setUploading(false);
     }
   };
 
-  // Submit profile
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSave = async () => {
+    setLoading(true);
+
     try {
       const { data } = await API.post("/auth/google", {
         uid: saved.uid,
         email: saved.email,
-        phone: saved?.phone || null,
+        phone: saved?.phone,
         firstName,
-        profilePic, // Cloudinary URL
-        referredBy: saved?.referredBy || null,
+        profilePic: image,
+        referredBy: saved?.referredBy
       });
 
       localStorage.setItem(
@@ -102,130 +112,145 @@ const Profile = () => {
           ...saved,
           firstName: data.user.firstName,
           profilePic: data.user.profilePic,
+          membership: data.user.membership
         })
       );
-
-      navigate("/dashboard");
     } catch (err) {
-      console.error("Profile update failed", err);
+      console.error("Profile update failed:", err);
     }
+
+    setLoading(false);
   };
 
-  if (loading)
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.href = "/login";
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-200 via-50% to-red-200 p-6 pt-24">
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-md p-6 flex flex-col items-center">
-        {/* Profile Picture */}
-        <div className="relative mb-4">
-          <img
-            src={preview || "https://via.placeholder.com/120"}
-            alt="Profile"
-            className="w-28 h-28 rounded-full object-cover border-4 border-[#8D6E63] shadow-md"
-          />
-          <label className="absolute bottom-0 right-0 bg-[#8D6E63] text-white px-2 py-1 rounded-full text-xs cursor-pointer hover:bg-[#5D4037]">
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageUpload}
+    <div className="min-h-screen bg-[#F7F7F8] p-6 flex justify-center pt-20">
+      <div className="w-full max-w-xl bg-white border border-gray-200 rounded-[12px] shadow-sm p-6">
+
+        <h2 className="text-[24px] font-semibold text-[#21252B] mb-6">Profile</h2>
+
+        {/* Avatar */}
+        <div className="flex gap-[10px] items-center mb-5">
+          <div className="relative w-[60px] h-[60px]">
+            <img
+              src={preview}
+              alt="Profile"
+              className="rounded-full w-[60px] h-[60px] object-cover border"
             />
-            {uploading ? "Uploading..." : "Upload"}
-          </label>
-        </div>
 
-        {/* Edit Profile */}
-        <h2 className="text-[#5D4037] text-xl font-semibold mb-4">Edit Profile</h2>
-        <form
-          onSubmit={handleSubmit}
-          className="w-full max-w-md flex flex-col gap-3 mb-6"
-        >
-          <input
-            type="text"
-            placeholder="First Name"
-            className="border p-2 rounded"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            required
-          />
-          <button
-            type="submit"
-            className="bg-[#8D6E63] text-white py-2 rounded hover:bg-[#5D4037] transition"
-            disabled={uploading}
-          >
-            Save Changes
-          </button>
-        </form>
-
-        {/* Membership QR */}
-        <div className="w-full max-w-md bg-gray-50 border rounded-lg p-4 text-center shadow-sm mb-8">
-          <h2 className="text-lg font-semibold mb-3 text-[#3E2723]">Your Membership</h2>
-          {user?.membership?.qrCodeToken ? (
-            <>
-              <QRCode
-                value={JSON.stringify({
-                  email: user.email,
-                  membershipType: user.membership?.type,
-                  qrCodeToken: user.membership?.qrCodeToken,
-                })}
-                size={140}
-              />
-              <p className="mt-3">Type: {user.membership.type}</p>
-              <p>
-                Expires:{" "}
-                {user.membership.expiresAt
-                  ? new Date(user.membership.expiresAt).toLocaleDateString()
-                  : "N/A"}
-              </p>
-              <p className="font-semibold text-green-600">
-                Remaining: {remainingDays} days
-              </p>
-            </>
-          ) : (
-            <p className="text-gray-600">No active membership.</p>
-          )}
-        </div>
-      </div>
-
-      {/* Bookings Section */}
-      <div className="max-w-6xl mx-auto mt-8 bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-lg font-semibold mb-4 text-[#3E2723]">Your Bookings</h2>
-        {bookings.length === 0 ? (
-          <p>No bookings yet.</p>
-        ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {bookings.map((b) => (
-              <div
-                key={b._id}
-                className="border p-4 rounded shadow-sm hover:shadow-md transition"
+            {/* Membership badge on avatar */}
+            {membership.type !== "Normal" && (
+              <span
+                className={`absolute bottom-0 right-0 text-[10px] px-1 py-[1px] rounded-full font-semibold ${
+                  membership.type === "Gold"
+                    ? "bg-yellow-400 text-white"
+                    : "bg-gray-500 text-white"
+                }`}
               >
-                <p>
-                  <strong>Services:</strong> {b.services.join(", ")}
-                </p>
-                <p>
-                  <strong>Date:</strong> {new Date(b.date).toLocaleDateString()}
-                </p>
-                <p>
-                  <strong>Time:</strong> {b.timeSlot}
-                </p>
-                <p>
-                  <strong>Status:</strong> {b.status}
-                </p>
-                <p>
-                  <strong>Amount:</strong> ₹{b.amount}
-                </p>
-                <p>
-                  <strong>Final Amount:</strong> ₹{b.finalAmount}
-                </p>
-              </div>
-            ))}
+                {membership.type}
+              </span>
+            )}
+
+            <label className="absolute top-0 right-0 bg-white rounded-full p-[4px] shadow cursor-pointer hover:bg-gray-100 transition">
+              <input type="file" className="hidden" onChange={handleImageUpload} />
+            </label>
           </div>
-        )}
+
+          {/* Membership info */}
+          <div className="flex flex-col">
+            <span
+              className={`text-[12px] px-2 py-[2px] rounded-full font-medium ${
+                membership.type === "Gold"
+                  ? "bg-yellow-100 text-yellow-700"
+                  : membership.type === "Silver"
+                  ? "bg-gray-200 text-gray-700"
+                  : "bg-blue-100 text-blue-700"
+              }`}
+            >
+              {membership.type}
+            </span>
+
+            <span className="text-[12px] text-gray-600 mt-1">
+              Discount: {info.discount}%
+            </span>
+
+            {membership.expiresAt && (
+              <span className="text-[12px] text-red-600">
+                Expires: {new Date(membership.expiresAt).toLocaleDateString()}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Form */}
+        <div className="space-y-3 text-[14px] text-[#21252B] mb-4">
+          <div>
+            <label>Name</label>
+            <input
+              type="text"
+              value={firstName}
+              onChange={e => setFirstName(e.target.value)}
+              className="mt-1 w-full font-medium border h-[56px] border-[#E9EAEC] rounded-[8px] px-3 py-2 outline-none"
+            />
+          </div>
+
+          <div>
+            <label>Email</label>
+            <input
+              value={email}
+              disabled
+              className="mt-1 w-full text-[#8E9196] border h-[56px] border-gray-200 rounded-[8px] px-3 py-2 bg-gray-50"
+            />
+          </div>
+        </div>
+
+        <button
+          onClick={handleSave}
+          disabled={loading}
+          className="w-full h-[56px] bg-[#E7F7EF] text-[#097C44] font-medium rounded-[8px] py-2 text-[14px]"
+        >
+          {loading ? "Updating..." : "Update Profile"}
+        </button>
+
+        <hr className="my-5" />
+
+        {/* Stats */}
+        <div className="flex justify-between text-center text-[#21252B]">
+          <div>
+            <p className="text-[16px]">All Bookings</p>
+            <p className="font-semibold text-[32px]">{stats.all}</p>
+          </div>
+
+          <div className="border-l border-gray-200 h-8"></div>
+
+          <div>
+            <p className="text-[16px]">Avg Saving</p>
+            <p className="font-semibold text-[32px]">₹{stats.avgSaving}</p>
+          </div>
+
+          <div className="border-l border-gray-200 h-8"></div>
+
+          <div>
+            <p className="text-[16px]">Total Saving</p>
+            <p className="font-semibold text-[32px]">₹{stats.totalSaving}</p>
+          </div>
+        </div>
+
+        {/* Logout */}
+        <div className="flex justify-center mt-8">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 text-gray-500 text-[16px] hover:text-red-500 transition"
+          >
+            <LogOut size={24} />
+            Logout
+          </button>
+        </div>
+
       </div>
     </div>
   );
