@@ -4,13 +4,12 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBOnt_j6-g28-8U_mfIH2mn-C2kRkalXb0",
-  authDomain: "salon-64bd1.firebaseapp.com",
-  projectId: "salon-64bd1",
-  storageBucket: "salon-64bd1.firebasestorage.app",
-  messagingSenderId: "509611331906",
-  appId: "1:509611331906:web:da39b2b5b47b6c505478db",
-  measurementId: "G-N3V85L22NX"
+  apiKey: "AIzaSyCgEqeMB8pPwaJ4beCoXt459PAIi7YW4J8",
+  authDomain: "mores-b0140.firebaseapp.com",
+  projectId: "mores-b0140",
+  storageBucket: "mores-b0140.firebasestorage.app",
+  messagingSenderId: "201392825948",
+  appId: "1:201392825948:web:81190d2cbfc608d950e899"
 };
 
 const app = initializeApp(firebaseConfig);
