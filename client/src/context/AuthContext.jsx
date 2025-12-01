@@ -20,13 +20,19 @@ export const AuthProvider = ({ children }) => {
 
       const res = await API.post("/auth/google", { idToken });
 
+      // Prefer backend-provided firstName, fall back to Firebase displayName or backend name
+      const derivedFirstName =
+        res.data?.user?.firstName ||
+        res.data?.user?.name ||
+        (result.user.displayName ? result.user.displayName.split(" ")[0] : "");
+
       const userData = {
         uid: result.user.uid,
         email: result.user.email,
-        firstName: res.data.user.firstName,
-        profilePic: res.data.user.profilePic,
-        isAdmin: res.data.user.isAdmin,
-        membership: res.data.user.membership || null,
+        firstName: derivedFirstName,
+        profilePic: res.data?.user?.profilePic || result.user.photoURL || "",
+        isAdmin: res.data?.user?.isAdmin || false,
+        membership: res.data?.user?.membership || null,
       };
 
       localStorage.setItem("user", JSON.stringify(userData));

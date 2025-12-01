@@ -15,12 +15,9 @@ import admin from "../config/firebaseAdmin.js";
 export const googleLogin = async (req, res) => {
   try {
     // Accept idToken from body or Authorization header
-    let idToken = null;
-    if (req.body && req.body.idToken) idToken = req.body.idToken;
+    let idToken = req.body?.idToken ?? null;
     const authHeader = req.headers.authorization || req.headers.Authorization;
-    if (!idToken && authHeader) {
-      idToken = authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : authHeader;
-    }
+    if (!idToken && authHeader) idToken = authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : authHeader;
 
     if (!idToken) return res.status(400).json({ msg: "ID Token required (body or Authorization header)" });
 
@@ -28,28 +25,40 @@ export const googleLogin = async (req, res) => {
     const decoded = await admin.auth().verifyIdToken(idToken);
     const { uid, email, name, picture } = decoded;
 
+    // Prefer to find user by firebaseUid; if not present, try matching by email
     let user = await User.findOne({ firebaseUid: uid });
-if (!user) {
-  user = new User({
-    firebaseUid: uid,
-    email,
-    firstName: name || "",
-    profilePic: picture || "",
-  });
-  await user.save();
-} else {
-      // Ensure firebaseUid is set if missing
-      if (!user.firebaseUid) {
+    if (!user && email) {
+      user = await User.findOne({ email });
+      if (user) {
+        // attach firebaseUid to existing user record
         user.firebaseUid = uid;
-        await user.save();
       }
     }
 
-    const token = jwt.sign(
-      { id: user._id, isAdmin: user.isAdmin },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    if (!user) {
+      // Create new user with full `name` field (matches schema)
+      user = new User({
+        firebaseUid: uid,
+        email,
+        name: name || "",
+        profilePic: picture || "",
+      });
+      await user.save();
+    } else {
+      // Update missing name/profilePic if Firebase provides them
+      let modified = false;
+      if ((!user.name || user.name === "") && name) {
+        user.name = name;
+        modified = true;
+      }
+      if ((!user.profilePic || user.profilePic === "") && picture) {
+        user.profilePic = picture;
+        modified = true;
+      }
+      if (modified) await user.save();
+    }
+
+    const token = jwt.sign({ id: user._id, isAdmin: user.isAdmin }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
     return res.status(200).json({ token, user });
   } catch (err) {
