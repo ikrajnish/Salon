@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import API from "../api/axios";
 import { LogOut } from "lucide-react";
+import StatsSection from "../components/StatsSection";
+import { Pencil } from "lucide-react";
+
 
 const CLOUDINARY_UPLOAD_PRESET = "ml_default";
 const CLOUDINARY_CLOUD_NAME = "dlbgabdi1";
@@ -17,52 +20,16 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  const [stats, setStats] = useState({
-    all: 0,
-    avgSaving: 0,
-    totalSaving: 0
-  });
-
   const membershipInfo = {
     Normal: { discount: 0 },
     Silver: { discount: 10 },
-    Gold: { discount: 20 }
+    Gold: { discount: 20 },
   };
 
   const membership = saved?.membership || { type: "Normal" };
   const info = membershipInfo[membership.type];
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
-  const fetchStats = async () => {
-    try {
-      const res = await API.get("/bookings/my");
-      const bookings = res.data || [];
-
-      let totalSaving = 0;
-
-      bookings.forEach(b => {
-        if (b.amount && b.finalAmount) {
-          totalSaving += b.amount - b.finalAmount;
-        }
-      });
-
-      const totalBookings = bookings.length;
-      const avgSaving = totalBookings ? totalSaving / totalBookings : 0;
-
-      setStats({
-        all: totalBookings,
-        avgSaving: Math.round(avgSaving),
-        totalSaving: Math.round(totalSaving)
-      });
-    } catch (err) {
-      console.error("Failed to fetch booking stats:", err);
-    }
-  };
-
-  const handleImageUpload = async e => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -76,7 +43,7 @@ const Profile = () => {
 
       const res = await fetch(CLOUDINARY_API, {
         method: "POST",
-        body: formData
+        body: formData,
       });
 
       const data = await res.json();
@@ -97,26 +64,16 @@ const Profile = () => {
     setLoading(true);
 
     try {
-      const { data } = await API.post("/auth/google", {
-        uid: saved.uid,
-        email: saved.email,
-        phone: saved?.phone,
+      const { data } = await API.put("/user/profile", {
         firstName,
         profilePic: image,
-        referredBy: saved?.referredBy
       });
 
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          ...saved,
-          firstName: data.user.firstName,
-          profilePic: data.user.profilePic,
-          membership: data.user.membership
-        })
-      );
+      if (data?.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
     } catch (err) {
-      console.error("Profile update failed:", err);
+      console.error("Profile update failed:", err.response?.data || err);
     }
 
     setLoading(false);
@@ -129,9 +86,11 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-[#F7F7F8] p-6 flex justify-center pt-20">
-      <div className="w-full max-w-xl bg-white border border-gray-200 rounded-[12px] shadow-sm p-6">
+      <div className="w-full max-w-xl bg-white border border-gray-200 rounded-[12px] shadow-sm p-6 flex flex-col">
 
-        <h2 className="text-[24px] font-semibold text-[#21252B] mb-6">Profile</h2>
+        <h2 className="text-[24px] font-semibold text-[#21252B] mb-6">
+          Profile
+        </h2>
 
         {/* Avatar */}
         <div className="flex gap-[10px] items-center mb-5">
@@ -142,7 +101,6 @@ const Profile = () => {
               className="rounded-full w-[60px] h-[60px] object-cover border"
             />
 
-            {/* Membership badge on avatar */}
             {membership.type !== "Normal" && (
               <span
                 className={`absolute bottom-0 right-0 text-[10px] px-1 py-[1px] rounded-full font-semibold ${
@@ -155,12 +113,13 @@ const Profile = () => {
               </span>
             )}
 
-            <label className="absolute top-0 right-0 bg-white rounded-full p-[4px] shadow cursor-pointer hover:bg-gray-100 transition">
+            <label className="absolute top-0 right-0 bg-white rounded-full p-[4px] shadow cursor-pointer hover:bg-gray-200 transition border">
+              <Pencil size={14} className="text-gray-700" />
               <input type="file" className="hidden" onChange={handleImageUpload} />
             </label>
           </div>
 
-          {/* Membership info */}
+          {/* Membership Info */}
           <div className="flex flex-col">
             <span
               className={`text-[12px] px-2 py-[2px] rounded-full font-medium ${
@@ -193,7 +152,7 @@ const Profile = () => {
             <input
               type="text"
               value={firstName}
-              onChange={e => setFirstName(e.target.value)}
+              onChange={(e) => setFirstName(e.target.value)}
               className="mt-1 w-full font-medium border h-[56px] border-[#E9EAEC] rounded-[8px] px-3 py-2 outline-none"
             />
           </div>
@@ -208,6 +167,7 @@ const Profile = () => {
           </div>
         </div>
 
+        {/* Save Button */}
         <button
           onClick={handleSave}
           disabled={loading}
@@ -218,26 +178,9 @@ const Profile = () => {
 
         <hr className="my-5" />
 
-        {/* Stats */}
-        <div className="flex justify-between text-center text-[#21252B]">
-          <div>
-            <p className="text-[16px]">All Bookings</p>
-            <p className="font-semibold text-[32px]">{stats.all}</p>
-          </div>
-
-          <div className="border-l border-gray-200 h-8"></div>
-
-          <div>
-            <p className="text-[16px]">Avg Saving</p>
-            <p className="font-semibold text-[32px]">₹{stats.avgSaving}</p>
-          </div>
-
-          <div className="border-l border-gray-200 h-8"></div>
-
-          <div>
-            <p className="text-[16px]">Total Saving</p>
-            <p className="font-semibold text-[32px]">₹{stats.totalSaving}</p>
-          </div>
+        {/* Stats Section with margin fix */}
+        <div className="mt-6">
+          <StatsSection />
         </div>
 
         {/* Logout */}
@@ -250,7 +193,6 @@ const Profile = () => {
             Logout
           </button>
         </div>
-
       </div>
     </div>
   );

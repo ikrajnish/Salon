@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import API from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import QRCode from "react-qr-code";
+import StatsSection from "../components/StatsSection";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -12,18 +13,7 @@ const Dashboard = () => {
 
   const membershipType = user?.membership?.type;
 
-  const totalSavings = bookings.reduce(
-    (acc, b) => acc + (b.amount - b.finalAmount),
-    0
-  );
-
-  const avgSavings =
-    bookings.length > 0 ? (totalSavings / bookings.length).toFixed(2) : 0;
-
-  // Loyalty stars (1 star per 3 bookings)
   const stars = Math.floor(bookings.length / 3);
-
-  // Streak calculation
   const streak = calculateStreak(bookings);
 
   useEffect(() => {
@@ -83,7 +73,8 @@ const Dashboard = () => {
 
         {user.membership?.expiresAt && (
           <p className="text-sm mt-1">
-            Expires on {new Date(user.membership.expiresAt).toLocaleDateString()}
+            Expires on{" "}
+            {new Date(user.membership.expiresAt).toLocaleDateString()}
           </p>
         )}
 
@@ -101,32 +92,19 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Stats Section */}
-      <div className="grid md:grid-cols-3 gap-4 mb-6 p-2">
-        <div className="p-4 bg-white rounded-xl shadow text-center">
-          <p className="text-gray-500 text-sm">Total Bookings</p>
-          <p className="text-xl font-bold">{bookings.length}</p>
-        </div>
+      {/* ✔ REUSABLE Stats Section */}
+      <StatsSection/>
 
-        <div className="p-4 bg-white rounded-xl shadow text-center ">
-          <p className="text-gray-500 text-sm">Total Savings</p>
-          <p className="text-xl font-bold text-green-600">₹{totalSavings}</p>
-        </div>
-
-        <div className="p-4 bg-white rounded-xl shadow text-center">
-          <p className="text-gray-500 text-sm">Avg Savings per Booking</p>
-          <p className="text-xl font-bold text-blue-600">₹{avgSavings}</p>
-        </div>
-      </div>
-
-      {/* Loyalty Stars + Streak Section */}
+      {/* Loyalty Stars + Streak */}
       <div className="p-4 rounded-xl bg-white shadow text-center mb-6">
         <p className="text-gray-600 text-sm">Your Current Streak</p>
         <p className="text-3xl font-bold text-orange-600">{streak}🔥</p>
 
         <div className="flex justify-center mt-3 gap-1">
           {Array.from({ length: stars }).map((_, index) => (
-            <span key={index} className="text-yellow-500 text-2xl">⭐</span>
+            <span key={index} className="text-yellow-500 text-2xl">
+              ⭐
+            </span>
           ))}
         </div>
 
@@ -145,47 +123,35 @@ const Dashboard = () => {
           bookings.map((b) => (
             <div
               key={b._id}
-              className="
-                bg-white/70 backdrop-blur-lg 
-                p-4 rounded-xl shadow-sm border 
-                mb-4 transition-all 
-                hover:shadow-lg hover:-translate-y-1
-                animate-fadeUp
-              "
+              className="bg-white/70 backdrop-blur-lg p-4 rounded-xl shadow-sm border mb-4 transition-all hover:shadow-lg hover:-translate-y-1 animate-fadeUp"
             >
-              {/* Top Row */}
               <div className="flex justify-between items-center mb-2">
                 <h3 className="font-semibold text-gray-800 text-lg">
                   {b.services.join(", ")}
                 </h3>
 
                 <span
-                  className={`
-                    px-3 py-1 rounded-full text-sm font-medium 
-                    ${b.status === "Completed" 
-                      ? "bg-green-100 text-green-700" 
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    b.status === "Completed"
+                      ? "bg-green-100 text-green-700"
                       : "bg-blue-100 text-blue-700"
-                    }
-                  `}
+                  }`}
                 >
                   {b.status}
                 </span>
               </div>
 
-              {/* Date & Time */}
               <div className="flex items-center gap-3 text-sm text-gray-600 mb-3">
-                <span className="flex items-center gap-1">
-                  📅 {new Date(b.date).toLocaleDateString()}
-                </span>
-                <span className="flex items-center gap-1">
-                  ⏰ {b.timeSlot}
-                </span>
+                <span>📅 {new Date(b.date).toLocaleDateString()}</span>
+                <span>⏰ {b.timeSlot}</span>
               </div>
 
-              {/* Price Section */}
               <div className="border-t pt-3 flex justify-between items-center">
                 <p className="text-gray-700 font-medium">
-                  Paid: <span className="text-green-600 font-bold">₹{b.finalAmount}</span>
+                  Paid:{" "}
+                  <span className="text-green-600 font-bold">
+                    ₹{b.finalAmount}
+                  </span>
                 </p>
 
                 <p className="text-red-500 line-through text-sm font-semibold">
@@ -193,7 +159,6 @@ const Dashboard = () => {
                 </p>
               </div>
 
-              {/* Savings Indicator */}
               <p className="mt-2 text-sm text-purple-600 font-medium">
                 You saved ₹{b.amount - b.finalAmount} 🎉
               </p>
@@ -202,7 +167,7 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Fullscreen QR Modal */}
+      {/* QR Modal */}
       {showQR && (
         <div
           className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
@@ -226,7 +191,7 @@ const Dashboard = () => {
 
 export default Dashboard;
 
-// Helper: calculate streak
+// Helper
 function calculateStreak(bookings) {
   if (bookings.length === 0) return 0;
 

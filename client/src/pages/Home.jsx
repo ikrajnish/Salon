@@ -1,12 +1,13 @@
 import React from "react";
 import ImageCarousel from "../components/ImageCarousel";
 import Services from "../components/Services";
+import StatsSection from "../components/StatsSection";
 
 const Home = () => {
   return (
-    <div className="w-full">
+    <div className="w-full bg-gradient-to-r from-blue-50 via-white to-pink-50">
       {/* Hero Section */}
-      <div className="relative w-full h-screen overflow-hidden pt-16">
+      <div className="relative w-full h-screen overflow-hidden pt-16 mb-6 ">
         <video
           autoPlay
           loop
@@ -34,6 +35,8 @@ const Home = () => {
           </div>
         </div>
       </div>
+
+      <StatsSection />
 
       {/* Services Section */}
       <Services />
